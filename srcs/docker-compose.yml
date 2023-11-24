@@ -1,0 +1,147 @@
+version: '3'
+
+services:
+  mariadb:
+    image: ${MARIADB_HOST}:${TAG}
+    build:
+      context: requirements/mariadb
+      args:
+        MYSQL_ROOT_USER: ${MYSQL_ROOT_USER}
+        MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+        MYSQL_USER: ${MYSQL_USER}
+        MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+        MYSQL_DATABASE: ${WORDPRESS_HOST}
+    container_name: ${MARIADB_HOST}
+    ports:
+      - ${MARIADB_PORT}:${MARIADB_PORT}
+    volumes:
+      - mariadb:/var/lib/mysql
+    restart: on-failure
+    networks:
+      - inception-net
+
+  wordpress:
+    image: ${WORDPRESS_HOST}:${TAG}
+    build:
+      context: requirements/wordpress
+      args:
+        WORDPRESS_DB_NAME: ${WORDPRESS_HOST}
+        WORDPRESS_DB_USER: ${MYSQL_USER}
+        WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
+        WORDPRESS_DB_HOST: ${MARIADB_HOST}
+    container_name: ${WORDPRESS_HOST}
+    ports:
+      - ${WORDPRESS_PORT}:${WORDPRESS_PORT}
+    volumes:
+      - wordpress:/var/www
+    depends_on:
+      - mariadb
+    restart: on-failure
+    networks:
+      - inception-net
+
+  nginx:
+    image: ${NGINX_HOST}:${TAG}
+    build:
+      context: requirements/nginx
+      args:
+        DOMAIN_NAME: ${DOMAIN_NAME}
+        WORDPRESS_HOST: ${WORDPRESS_HOST}
+    container_name: ${NGINX_HOST}
+    volumes:
+      - wordpress:/var/www
+    depends_on:
+      - wordpress
+    restart: on-failure
+    networks:
+      - inception-net
+    ports:
+      - ${PORT}:${PORT}
+  ftp:
+    image: ${FTP_HOST}:${TAG}
+    build:
+      context: requirements/bonus/ftp
+    container_name: ${FTP_HOST}
+    volumes:
+      - wordpress:/var/www
+    depends_on:
+      - wordpress
+    restart: on-failure
+    networks:
+      - inception-net
+    ports:
+      - ${FTP_PORT}:${FTP_PORT}
+  portfolio:
+    image: ${PORTFOLIO_HOST}:${TAG}
+    build:
+      context: requirements/bonus/portfolio
+    container_name: ${PORTFOLIO_HOST}
+    volumes:
+      - wordpress:/var/www
+    depends_on:
+      - wordpress
+    restart: on-failure
+    networks:
+      - inception-net
+  adminer:
+    image: ${ADMINER_HOST}:${TAG}
+    build:
+      context: requirements/bonus/adminer
+    container_name: ${ADMINER_HOST}
+    volumes:
+      - wordpress:/var/www
+    depends_on:
+      - wordpress
+    restart: on-failure
+    networks:
+      - inception-net
+    # ports:
+      # - ${ADMINER_PORT}:${ADMINER_PORT}
+  redis:
+    image: ${REDIS_HOST}:${TAG}
+    build:
+      context: requirements/bonus/redis
+    container_name: ${REDIS_HOST}
+    depends_on:
+      - wordpress
+    restart: on-failure
+    ports:
+      - ${REDIS_PORT}:${REDIS_PORT}
+    networks:
+      - inception-net
+  netdata:
+    image: ${NETDATA_HOST}:${TAG}
+    build:
+      context: requirements/bonus/netdata
+    container_name: ${NETDATA_HOST}
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /etc/passwd:/host/etc/passwd:ro
+      - /etc/group:/host/etc/group:ro
+    depends_on:
+      - wordpress
+    restart: on-failure
+    networks:
+      - inception-net
+    ports:
+      - 8080:${NETDATA_PORT}
+
+networks:
+  inception-net:
+    name: inception-net
+
+volumes:
+  mariadb:
+    name: mariadb-volume
+    driver_opts:
+      o: bind
+      type: none
+      device: ${VOLUME_PATH}/mariadb
+  wordpress:
+    name: wordpress-volume
+    driver_opts:
+      o: bind
+      type: none
+      device: ${VOLUME_PATH}/wordpress
