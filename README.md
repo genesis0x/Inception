@@ -34,11 +34,45 @@ In this section, your task is to set up a small infrastructure composed of diffe
 ## Chapter VI: Directory Structure Example
 
 ```bash
-$> ls -alR
-total XX
-drwxrwxr-x 3 user user 4096 Nov 26 20:42 .
-# ... (directory structure details)
-$>
+.
+├── Makefile
+└── srcs
+    ├── docker-compose.yml
+    └── requirements
+        ├── bonus
+        │   ├── adminer
+        │   │   ├── Dockerfile
+        │   │   └── tools
+        │   │       └── setup_adminer.sh
+        │   ├── ftp
+        │   │   ├── Dockerfile
+        │   │   └── tools
+        │   │       └── setup_ftp.sh
+        │   ├── netdata
+        │   │   └── Dockerfile
+        │   ├── portfolio
+        │   │   ├── Dockerfile
+        │   │   └── tools
+        │   │       └── index.html
+        │   └── redis
+        │       └── Dockerfile
+        ├── mariadb
+        │   ├── Dockerfile
+        │   └── tools
+        │       ├── db_setup.sh
+        │       └── wp_backup.sql
+        ├── nginx
+        │   ├── Dockerfile
+        │   ├── conf
+        │   │   ├── default.conf.template
+        │   │   └── nginx.conf
+        │   └── tools
+        │       └── index.html
+        └── wordpress
+            ├── Dockerfile
+            └── conf
+                ├── wp-config.php.template
+                └── www.conf.template
 ```
 
 ## Chapter VII: Bonus Part
